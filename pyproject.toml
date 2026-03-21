@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 coda-mcp = "coda_mcp.server:main"
+coda-mcp-http = "coda_mcp.server:main_http"
 
 [tool.hatch.build.targets.wheel]
 packages = ["coda_mcp"]

@@ -10,4 +10,10 @@ register_tools(mcp)
 
 
 def main() -> None:
+    """MCP over stdio (e.g. Cursor)."""
     mcp.run()
+
+
+def main_http() -> None:
+    """MCP over HTTP (e.g. cloud; API key via ``Authorization: Bearer``)."""
+    mcp.run(transport="http")

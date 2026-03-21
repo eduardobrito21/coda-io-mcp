@@ -2,7 +2,7 @@ from functools import cached_property
 
 import httpx
 
-from coda_mcp.config import Settings, settings
+from coda_mcp.config import settings
 
 from .automations import AutomationsClient
 from .common import CodaRequestMixin
@@ -18,21 +18,9 @@ from .workspaces import WorkspacesClient
 class CodaClient(CodaRequestMixin):
     """Async HTTP client for the Coda REST API (v1), grouped by API doc sections."""
 
-    _settings: Settings
-
-    def __init__(self, settings: Settings):
-        self._settings = settings
-        self.http = httpx.AsyncClient(
-            headers=self._headers(),
-            timeout=httpx.Timeout(30.0),
-        )
-        self.base_url = settings.coda_base_url.rstrip("/") + "/"
-
-    def _headers(self) -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self._settings.coda_api_key.get_secret_value()}",
-            "Content-Type": "application/json",
-        }
+    def __init__(self):
+        self.http = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+        self.base_url = f"{settings.coda_base_url.rstrip('/')}/"
 
     @cached_property
     def docs(self) -> DocsClient:
@@ -66,8 +54,8 @@ class CodaClient(CodaRequestMixin):
     def workspaces(self) -> WorkspacesClient:
         return WorkspacesClient(http=self.http, base_url=self.base_url)
 
-    async def aclose(self):
+    async def aclose(self) -> None:
         await self.http.aclose()
 
 
-coda_client = CodaClient(settings)
+coda_client = CodaClient()

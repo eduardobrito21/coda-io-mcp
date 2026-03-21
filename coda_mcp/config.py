@@ -8,7 +8,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    coda_api_key: SecretStr
+    coda_api_key: SecretStr | None = None
     coda_base_url: str = "https://coda.io/apis/v1"
 
 

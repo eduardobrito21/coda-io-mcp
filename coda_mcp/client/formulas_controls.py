@@ -27,18 +27,24 @@ class FormulasControlsClient(CodaRequestMixin):
         self,
         doc_id: str,
         query: FormulasListQuery | None = None,
+        *,
+        api_key: str,
     ) -> FormulasListResponse:
         response = await self.http.get(
             self.url(f"/docs/{quote(doc_id, safe='')}/formulas"),
             params=self.query_dict(query),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(FormulasListResponse, response.json())
 
-    async def get_formula(self, doc_id: str, formula_id_or_name: str) -> FormulaDetail:
+    async def get_formula(
+        self, doc_id: str, formula_id_or_name: str, *, api_key: str
+    ) -> FormulaDetail:
         seg = quote(formula_id_or_name, safe="")
         response = await self.http.get(
             self.url(f"/docs/{quote(doc_id, safe='')}/formulas/{seg}"),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(FormulaDetail, response.json())
@@ -47,18 +53,24 @@ class FormulasControlsClient(CodaRequestMixin):
         self,
         doc_id: str,
         query: ControlsListQuery | None = None,
+        *,
+        api_key: str,
     ) -> ControlsListResponse:
         response = await self.http.get(
             self.url(f"/docs/{quote(doc_id, safe='')}/controls"),
             params=self.query_dict(query),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(ControlsListResponse, response.json())
 
-    async def get_control(self, doc_id: str, control_id_or_name: str) -> ControlDetail:
+    async def get_control(
+        self, doc_id: str, control_id_or_name: str, *, api_key: str
+    ) -> ControlDetail:
         seg = quote(control_id_or_name, safe="")
         response = await self.http.get(
             self.url(f"/docs/{quote(doc_id, safe='')}/controls/{seg}"),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(ControlDetail, response.json())

@@ -16,6 +16,12 @@ class CodaRequestMixin:
     http: httpx.AsyncClient
     base_url: str
 
+    def _auth_headers(self, api_key: str) -> dict[str, str]:
+        return {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
     def url(self, path: str) -> str:
         base = self.base_url.rstrip("/") + "/"
         return urljoin(base, path.removeprefix("/"))

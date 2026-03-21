@@ -33,11 +33,14 @@ class DocStructureClient(CodaRequestMixin):
         self,
         doc_id: str,
         query: PagesListQuery | None = None,
+        *,
+        api_key: str,
     ) -> PagesListResponse:
         d = quote(doc_id, safe="")
         response = await self.http.get(
             self.url(f"/docs/{d}/pages"),
             params=self.query_dict(query),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(PagesListResponse, response.json())
@@ -46,19 +49,25 @@ class DocStructureClient(CodaRequestMixin):
         self,
         doc_id: str,
         body: CreatePageBody,
+        *,
+        api_key: str,
     ) -> PageMutationQueuedResponse:
         d = quote(doc_id, safe="")
         response = await self.http.post(
             self.url(f"/docs/{d}/pages"),
             json=body.model_dump(by_alias=True, exclude_none=True),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(PageMutationQueuedResponse, response.json())
 
-    async def delete_page(self, doc_id: str, page_id: str) -> None:
+    async def delete_page(self, doc_id: str, page_id: str, *, api_key: str) -> None:
         d = quote(doc_id, safe="")
         p = self._page_seg(page_id)
-        response = await self.http.delete(self.url(f"/docs/{d}/pages/{p}"))
+        response = await self.http.delete(
+            self.url(f"/docs/{d}/pages/{p}"),
+            headers=self._auth_headers(api_key),
+        )
         response.raise_for_status()
 
     async def begin_page_export(
@@ -66,12 +75,15 @@ class DocStructureClient(CodaRequestMixin):
         doc_id: str,
         page_id: str,
         body: PageExportRequest,
+        *,
+        api_key: str,
     ) -> PageExportBeginResponse:
         d = quote(doc_id, safe="")
         p = self._page_seg(page_id)
         response = await self.http.post(
             self.url(f"/docs/{d}/pages/{p}/export"),
             json=body.model_dump(by_alias=True),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(PageExportBeginResponse, response.json())
@@ -81,17 +93,20 @@ class DocStructureClient(CodaRequestMixin):
         doc_id: str,
         page_id: str,
         request_id: str,
+        *,
+        api_key: str,
     ) -> PageExportStatusResponse:
         d = quote(doc_id, safe="")
         p = self._page_seg(page_id)
         r = quote(request_id, safe="")
         response = await self.http.get(
             self.url(f"/docs/{d}/pages/{p}/export/{r}"),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(PageExportStatusResponse, response.json())
 
-    async def export_page_markdown(self, doc_id: str, page_id: str) -> str:
+    async def export_page_markdown(self, doc_id: str, page_id: str, *, api_key: str) -> str:
         """POST begin export, poll status, then download markdown from ``downloadLink``."""
         begin = await self.begin_page_export(
             doc_id,
@@ -101,13 +116,14 @@ class DocStructureClient(CodaRequestMixin):
                 {"outputFormat": "markdown"},
                 by_alias=True,
             ),
+            api_key=api_key,
         )
         export_id = begin.id
         delay_s = 0.5
         max_attempts = 120
         download_link: str | None = None
         for _ in range(max_attempts):
-            status = await self.get_page_export_status(doc_id, page_id, export_id)
+            status = await self.get_page_export_status(doc_id, page_id, export_id, api_key=api_key)
             if status.error:
                 msg = f"Coda export failed: {status.error}"
                 raise RuntimeError(msg)
@@ -118,7 +134,7 @@ class DocStructureClient(CodaRequestMixin):
         if not download_link:
             msg = "Timed out waiting for page export download link"
             raise TimeoutError(msg)
-        dl = await self.http.get(download_link)
+        dl = await self.http.get(download_link, headers=self._auth_headers(api_key))
         dl.raise_for_status()
         return dl.text
 
@@ -127,12 +143,15 @@ class DocStructureClient(CodaRequestMixin):
         doc_id: str,
         page_id: str,
         body: PutPageBody,
+        *,
+        api_key: str,
     ) -> PageMutationQueuedResponse:
         d = quote(doc_id, safe="")
         p = self._page_seg(page_id)
         response = await self.http.put(
             self.url(f"/docs/{d}/pages/{p}"),
             json=body.model_dump(by_alias=True, exclude_none=True),
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(PageMutationQueuedResponse, response.json())
