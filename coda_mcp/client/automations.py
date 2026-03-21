@@ -21,6 +21,8 @@ class AutomationsClient(CodaRequestMixin):
         doc_id: str,
         automation_id: str,
         body: TriggerAutomationBody,
+        *,
+        api_key: str,
     ) -> TriggerAutomationResponse:
         d = quote(doc_id, safe="")
         a = quote(automation_id, safe="")
@@ -28,6 +30,7 @@ class AutomationsClient(CodaRequestMixin):
         response = await self.http.post(
             self.url(f"/docs/{d}/automations/{a}/runs"),
             json=json_body,
+            headers=self._auth_headers(api_key),
         )
         response.raise_for_status()
         return validate_pydantic(TriggerAutomationResponse, response.json())

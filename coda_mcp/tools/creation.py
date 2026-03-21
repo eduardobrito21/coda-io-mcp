@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 
 from coda_mcp.client import coda_client
+from coda_mcp.dependencies import CodaApiKeyDependency
 from coda_mcp.models import CreateDocBody, CreatePageBody, DocDetail
 
 
@@ -10,6 +11,7 @@ def register(mcp: FastMCP) -> None:
         title: str,
         source_doc_id: str = "",
         folder_id: str = "",
+        coda_api_key: str = CodaApiKeyDependency,
     ) -> DocDetail:
         """Create a new Coda doc. Optionally copy from an existing doc (source_doc_id) or place it in a specific folder (folder_id)."""
         payload: dict[str, object] = {"title": title}
@@ -18,7 +20,7 @@ def register(mcp: FastMCP) -> None:
         if folder_id:
             payload["folderId"] = folder_id
         body = CreateDocBody.model_validate(payload)
-        return await coda_client.docs.create_doc(body)
+        return await coda_client.docs.create_doc(body, api_key=coda_api_key)
 
     @mcp.tool()
     async def create_page(
@@ -26,6 +28,7 @@ def register(mcp: FastMCP) -> None:
         name: str,
         content: str = "",
         parent_page_id: str = "",
+        coda_api_key: str = CodaApiKeyDependency,
     ) -> str:
         """Create a new page in a Coda doc. Optionally provide markdown content and a parent_page_id to nest it as a subpage."""
         payload: dict[str, object] = {"name": name}
@@ -37,5 +40,5 @@ def register(mcp: FastMCP) -> None:
                 "canvasContent": {"format": "markdown", "content": content},
             }
         body = CreatePageBody.model_validate(payload)
-        result = await coda_client.doc_structure.create_page(doc_id, body)
+        result = await coda_client.doc_structure.create_page(doc_id, body, api_key=coda_api_key)
         return f"Page '{name}' created (request_id={result.request_id}, page_id={result.id})."

@@ -16,13 +16,19 @@ class WorkspacesClient(CodaRequestMixin):
     http: httpx.AsyncClient
     base_url: str
 
-    async def list_workspaces(self) -> WorkspacesListResponse:
-        response = await self.http.get(self.url("/workspaces"))
+    async def list_workspaces(self, *, api_key: str) -> WorkspacesListResponse:
+        response = await self.http.get(
+            self.url("/workspaces"),
+            headers=self._auth_headers(api_key),
+        )
         response.raise_for_status()
         return validate_pydantic(WorkspacesListResponse, response.json())
 
-    async def get_workspace(self, workspace_id: str) -> WorkspaceItem:
+    async def get_workspace(self, workspace_id: str, *, api_key: str) -> WorkspaceItem:
         w = quote(workspace_id, safe="")
-        response = await self.http.get(self.url(f"/workspaces/{w}"))
+        response = await self.http.get(
+            self.url(f"/workspaces/{w}"),
+            headers=self._auth_headers(api_key),
+        )
         response.raise_for_status()
         return validate_pydantic(WorkspaceItem, response.json())

@@ -15,5 +15,6 @@
   "reportUnannotatedClassAttribute": false,
   "reportAny": false,
   "reportExplicitAny": false,
-  "reportUninitializedInstanceVariable": false
+  "reportUninitializedInstanceVariable": false,
+  "reportCallInDefaultInitializer": false
 }
